@@ -27,10 +27,33 @@ def parseargsinput():
     parser.add_argument('-kf', default=True)
     parser.add_argument('-ID3', action='store_true')
     parser.add_argument('-C45', action='store_true')
-    # parser.add_argument('-hl', help='Input holdout', required=False)
+    parser.add_argument('-hl', help='Input holdout', required=False)
 
     args = parser.parse_args()
     return vars(args)
+
+
+def maketree(conv, d, mushColDomain, names, train, val):
+    if d['ID3']:
+        id3 = ID3(train, 2, mushColDomain)
+        print '> training ID3...'
+        tree = Tree(id3.ID3(), names, conv)
+        print '> validation'
+        print '----------------'
+        Validate.measure(val, tree)
+        print '----------------\n'
+
+        tree.render()
+    if d['C45']:
+        c45 = C45(train, 2, mushColDomain)
+        print '> training C4.5...'
+        tree = Tree(c45.C45(), names, conv)
+        print '> validation'
+        print '----------------'
+        Validate.measure(val, tree)
+        print '----------------\n'
+
+        tree.render()
 
 
 def main():
@@ -40,6 +63,7 @@ def main():
 
     k = 2
     tratio = 0.8
+
 
     # Parseo de la base de datos
 
@@ -60,7 +84,6 @@ def main():
         np.random.shuffle(indices)
 
         for i in range(0, k):
-
             # ----- Dividir dades -----
 
             indice_val = indices[len(indices) / k * i:len(indices) / k * (i + 1)]
@@ -72,27 +95,18 @@ def main():
             train = data[indice_train1]
             val = data[indice_val]
 
-            if d['ID3']:
-                id3 = ID3(train, 2, mushColDomain)
-                print '> training ID3...'
-                tree = Tree(id3.ID3(), names, conv)
-                print '> validation'
-                print '----------------'
-                Validate.measure(val, tree)
-                print '----------------\n'
+            maketree(conv, d, mushColDomain, names, train, val)
 
-                tree.render()
+    # ================================================================
+    # ============================ HOLD-OUT ==========================
+    # ================================================================
 
-            if d['C45']:
-                c45 = C45(train, 2, mushColDomain)
-                print '> training C4.5...'
-                tree = Tree(c45.C45(), names, conv)
-                print '> validation'
-                print '----------------'
-                Validate.measure(val, tree)
-                print '----------------\n'
+    if d['hl']:
+        print '\n============================ HOLD-OUT =========================='
 
-                tree.render()
+        # ----- Dividir dades -----
+        train, val = split_data(data, tratio)
+        maketree(conv, d, mushColDomain, names, train, val)
 
 
 if __name__ == '__main__':
