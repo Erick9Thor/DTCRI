@@ -2,6 +2,7 @@ import ParseData as pd
 import argparse
 import numpy as np
 from ID3 import ID3
+from C45 import C45
 from Tree import Tree
 import Validate
 
@@ -9,7 +10,7 @@ import Validate
 def split_data(data, train_ratio):
     indices = np.arange(data.shape[0])
     np.random.shuffle(indices)
-    n_train = int(np.floor(data.shape[0] * (train_ratio)))
+    n_train = int(np.floor(data.shape[0] * train_ratio))
     indices_train = indices[:n_train]
     indices_val = indices[n_train:]
     x_train = data[indices_train]
@@ -25,8 +26,8 @@ def parseargsinput():
     parser.add_argument('-p', help='Path of data', required=True)
     parser.add_argument('-kf', default=True)
     parser.add_argument('-ID3', action='store_true')
+    parser.add_argument('-C45', action='store_true')
     # parser.add_argument('-hl', help='Input holdout', required=False)
-    #parser.add_argument('-C45', help='Input C45', required=False)
 
     args = parser.parse_args()
     return vars(args)
@@ -75,6 +76,17 @@ def main():
                 id3 = ID3(train, 2, mushColDomain)
                 print '> training ID3...'
                 tree = Tree(id3.ID3(), names, conv)
+                print '> validation'
+                print '----------------'
+                Validate.measure(val, tree)
+                print '----------------\n'
+
+                tree.render()
+
+            if d['C45']:
+                c45 = C45(train, 2, mushColDomain)
+                print '> training C4.5...'
+                tree = Tree(c45.C45(), names, conv)
                 print '> validation'
                 print '----------------'
                 Validate.measure(val, tree)
